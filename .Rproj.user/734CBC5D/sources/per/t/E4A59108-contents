@@ -1,0 +1,60 @@
+library(tidyverse)
+
+df <- tibble(
+  x.axis.Var = rep(c("Widgets", "Gridgets", "Groms", "Wobs"), 3),
+  cat.Var = rep(c("High End", "Mid Range", "Low End"), each = 4),
+  values = c(600, 500, 300, 200, # high end
+             300, 200, 300, 250, # mid range
+             100, 80, 200, 150   # low end
+             )
+  )
+  
+ggplot(df, aes(x = x.axis.Var, y = values, fill = cat.Var)) +
+  geom_col()
+
+
+my_prepare_df <- function(df, 
+                          x_axis_var, x_axis_order, 
+                          cat_var, cat_order,
+                          value_var,
+                          bar_width, stacked) {
+  df %>% 
+    mutate(
+      {{x_axis_var}} := fct_relevel({{x_axis_var}}, x_axis_order),
+      {{cat_var}} := fct_relevel({{cat_var}}, cat_order),
+    ) %>% 
+    arrange({{x_axis_var}}, {{cat_var}}) %>% 
+    mutate(
+      bar_bottom = cumsum(c(0, head({{value_var}}, -1))),
+      bar_top = {{value_var}} + bar_bottom,
+    ) %>% 
+    group_by({{x_axis_var}}) %>% 
+    mutate(
+      group_id = cur_group_id(),
+      bar_left = group_id - bar_width,
+      bar_right = group_id + bar_width,
+    ) %>% 
+    ungroup()
+}
+
+my_prep_df <- my_prepare_df(
+  df, 
+  x.axis.Var, c("Widgets", "Gridgets", "Groms", "Wobs"),
+  cat.Var, c("High End", "Mid Range", "Low End"),
+  values,
+  bar_width = 0.25,
+  stacked = T
+)
+
+# stacked version
+ggplot(my_prep_df) + 
+  geom_rect(aes(
+    x = x.axis.Var, 
+    fill = cat.Var,
+    xmin = bar_left,
+    xmax = bar_right,
+    ymin = bar_bottom,
+    ymax = bar_top,
+  ))
+
+# side-by-side version
