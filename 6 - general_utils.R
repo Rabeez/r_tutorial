@@ -32,11 +32,42 @@ data <- tribble(
 # --------- converting to tidy -------------
 # tidyr (pivot_longer, pivot_wider)
 
+# different 'views' of teh exact same data
+tidyr::table1
+tidyr::table2
+tidyr::table3
+tidyr::table4a
+tidyr::table4b
+tidyr::table5
+
+# long to wide - 'pivot table' (no aggregation applied so only reshaping)
+fish_encounters %>%
+  pivot_wider(names_from = station, values_from = seen)
+
+# wide to long
 relig_income %>%
   pivot_longer(!religion, names_to = "income", values_to = "count")
 
-fish_encounters %>%
-  pivot_wider(names_from = station, values_from = seen)
+# wide to long (2 variables)
+make_bad_wide_table <- function(d) {
+  temp <- d %>%
+    pivot_longer(!religion, names_to = "income", values_to = "count")
+  
+  m <- temp %>% 
+    mutate(gender = "Male")
+  f <- temp %>% 
+    mutate(gender = "Female")
+  
+  bind_rows(m, f) %>% 
+    select(religion, gender, income, count) %>% 
+    mutate(col_name = glue::glue("{gender} | {income}")) %>% 
+    pivot_wider(id_cols = c("religion"), names_from = c("col_name"), values_from = "count")
+}
+relig_income_super_wide <- make_bad_wide_table(relig_income)
+
+relig_income_super_wide %>% 
+  pivot_longer(!religion, names_to = "gender|income", values_to = "count") %>% 
+  separate("gender|income", into = c("gender", "income"), sep = " \\| ")
 
 # --------- string manipulation ------------
 # stringr
