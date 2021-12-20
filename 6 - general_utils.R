@@ -14,7 +14,7 @@ mtcars_df2 <- read_csv(content(httr::GET("https://github.com/tidyverse/readr/raw
 # excel file (only option is to download the file to hard disk and load it afterwards)
 # you can prevent clutter of random excel files in folder by using a tempfile
 httr::GET("https://github.com/Hamleyburger/Django_FecobiomeInitiative/blob/48d3eb5b6a90f2d057a08ea49ae9070d9d268456/media/admin/examples/data_template.xlsx?raw=true", 
-          write_disk(tf <- tempfile(fileext = ".xlsx")))
+          httr::write_disk(tf <- tempfile(fileext = ".xlsx")))
 excel_df <- readxl::read_excel(tf)
 
 
