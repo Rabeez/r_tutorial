@@ -276,7 +276,7 @@ p1 <- model_estimates %>%
   geom_abline(intercept = 0, slope = 0, color = "gray69") + 
   geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.2) +
   geom_point() + 
-  scale_color_manual(values = c("green3", "red2"), guide = F) +
+  scale_color_manual(values = c("green3", "red2"), guide = "none") +
   scale_y_continuous(labels = scales::label_percent()) + 
   labs(title = "Change is odds of being diagnosed with breast cancer \nfor a unit increase in each indicator")
 p1
