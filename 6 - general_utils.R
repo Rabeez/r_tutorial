@@ -13,8 +13,10 @@ mtcars_df2 <- read_csv(content(httr::GET("https://github.com/tidyverse/readr/raw
 
 # excel file (only option is to download the file to hard disk and load it afterwards)
 # you can prevent clutter of random excel files in folder by using a tempfile
-httr::GET("https://github.com/Hamleyburger/Django_FecobiomeInitiative/blob/48d3eb5b6a90f2d057a08ea49ae9070d9d268456/media/admin/examples/data_template.xlsx?raw=true", 
-          httr::write_disk(tf <- tempfile(fileext = ".xlsx")))
+httr::GET(
+  "https://github.com/Hamleyburger/Django_FecobiomeInitiative/blob/48d3eb5b6a90f2d057a08ea49ae9070d9d268456/media/admin/examples/data_template.xlsx?raw=true", 
+  httr::write_disk(tf <- tempfile(fileext = ".xlsx"))
+)
 excel_df <- readxl::read_excel(tf)
 
 
@@ -96,10 +98,12 @@ glue::glue("My name is {name}. Nice to meet you")
 # forcats
 fct_count(diamonds$clarity)
 
-fct_collapse(diamonds$clarity,
-             good = c("IF", "VVS1", "VVS2"),
-             medium = c("VS1", "VS2"),
-             bad = c("SI1", "SI2", "I1")) %>% 
+fct_collapse(
+  diamonds$clarity,
+  good = c("IF", "VVS1", "VVS2"),
+  medium = c("VS1", "VS2"),
+  bad = c("SI1", "SI2", "I1")
+) %>% 
   fct_count()
 
 # reorder factors based on frequency
@@ -227,10 +231,12 @@ as_tibble(mtcars, rownames = "car") %>%
 as_tibble(mtcars, rownames = "car") %>%
   ggplot(aes(wt, mpg, label = car)) +
   geom_point(color = "red") + 
-  gghighlight::gghighlight((gear == 3) & (mpg > 20), 
-                           label_key = car,
-                           use_direct_label = FALSE, 
-                           unhighlighted_params = list(color = alpha("black", 0.5))) + 
+  gghighlight::gghighlight(
+    (gear == 3) & (mpg > 20), 
+    label_key = car,
+    use_direct_label = FALSE, 
+    unhighlighted_params = list(color = alpha("black", 0.5))
+  ) + 
   ggrepel::geom_text_repel() +
   labs(title = "The only 3-gear cars with more than 20 miles/gallon")
 
@@ -238,15 +244,19 @@ as_tibble(mtcars, rownames = "car") %>%
 # --------- plotting on maps ---------------
 # gps map (stamen, ggmap)
 crime_df <- tibble(ggmap::crime) %>% 
-  filter(between(lat, 29.73631, 29.78400),
-         between(lon, -95.39681, -95.34188))
+  filter(
+    between(lat, 29.73631, 29.78400),
+    between(lon, -95.39681, -95.34188)
+  )
 
 ggmap::qmplot(lon, lat, data = crime_df, maptype = "toner-lite", color = I("red"))
 ggmap::qmplot(lon, lat, data = crime_df, maptype = "toner-lite", geom = "density2d", color = I("red"))
 
 crime_df %>%
-  ggmap::qmplot(lon, lat, data = ., 
-                maptype = "toner-background", geom = "blank", darken = .7) + 
+  ggmap::qmplot(
+    lon, lat, data = ., 
+    maptype = "toner-background", geom = "blank", darken = .7
+  ) + 
   stat_density_2d(aes(fill = ..level..), geom="polygon", alpha = 0.3) + 
   scale_fill_gradient2("Crime level", low = "blue", mid = "pink", high = "red", midpoint = 1500, limits = c(0, 3000))
 
@@ -256,8 +266,10 @@ crime_df %>%
 
 # tigris package has lots of geographical info for the US
 continential_us <- tigris::states() %>% 
-  filter(REGION != 9,
-         !(NAME %in% c("Hawaii", "Alaska")))
+  filter(
+    REGION != 9,
+    !(NAME %in% c("Hawaii", "Alaska"))
+  )
 
 # here I just plot the polygons using geom_sf
 continential_us %>% 
@@ -272,8 +284,10 @@ landmarks_ca %>%
   arrange(desc(ALAND + AWATER)) %>% 
   head(50) %>% 
   ggplot(aes(fill = AWATER)) + 
-  geom_polygon(data = map_data("state", "CA"), aes(long, lat), 
-               fill = NA, color = "gray60") + 
+  geom_polygon(
+    data = map_data("state", "CA"), aes(long, lat), 
+    fill = NA, color = "gray60"
+  ) + 
   geom_sf(size = 0.1, color = "white") + 
   scale_fill_continuous("Area of water", labels = scales::comma_format()) + 
   ggthemes::theme_map() + 
@@ -320,10 +334,12 @@ funneljoin::landed
 # 2. For selected users choose timestamps: The chosen 'type' means that in the result for each user we want the first landing time and 
 # the first registration time after the chosen landing
 funneljoin::landed %>%
-  funneljoin::after_inner_join(funneljoin::registered, 
-                               by_user = "user_id", by_time = "timestamp",
-                               type = "first-firstafter",
-                               suffix = c("_landed", "_registered"))
+  funneljoin::after_inner_join(
+    unneljoin::registered, 
+    by_user = "user_id", by_time = "timestamp",
+    type = "first-firstafter",
+    suffix = c("_landed", "_registered")
+  )
 
 # Of course there are other join functions and types available and these can be chained to create a longer funnel with more conversion steps
 

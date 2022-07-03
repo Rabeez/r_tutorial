@@ -22,8 +22,11 @@ my_flights %>%
   inner_join(my_planes) # more commonly used piping syntax
 inner_join(my_flights, my_planes, by = "tailnum")
 inner_join(my_flights, my_planes, by = c("tailnum", "year")) # explicit equivalent of the natural join above (shown here as example of multiple column join)
-inner_join(my_flights, my_planes, by = c("flight_tail_number" = "plane_tail_number", 
-                                         "flight_year" = "plane_year")) # illustrative example of joining when column names don't match (will NOT actually work with this data)
+inner_join(
+  my_flights, my_planes, 
+  by = c("flight_tail_number" = "plane_tail_number", 
+         "flight_year" = "plane_year")
+) # illustrative example of joining when column names don't match (will NOT actually work with this data)
 left_join(my_flights, my_planes, by = "tailnum")
 right_join(my_flights, my_planes, by = "tailnum")
 full_join(my_flights, my_planes, by = "tailnum")
