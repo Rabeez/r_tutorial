@@ -89,10 +89,12 @@ diamonds %>%
   geom_density(size = 1) +
   geom_rug(size = 0.05, alpha = 0.05) +
   scale_x_log10(labels = scales::dollar_format()) + 
-  labs(x = "Price", y = "Density", 
-       title = "What is the price of diamonds?", 
-       subtitle = "Price plotted on a log scale", 
-       caption= "Source: tidyverse sample data") + 
+  labs(
+    x = "Price", y = "Density", 
+    title = "What is the price of diamonds?", 
+    subtitle = "Price plotted on a log scale", 
+    caption= "Source: tidyverse sample data"
+  ) + 
   theme_minimal()
 
 
@@ -130,6 +132,9 @@ diamonds %>%
   ggplot(aes(x = color, y = estimate, size = amount)) +
   geom_point() + 
   geom_smooth(aes(weight = amount, group = 1), method = "lm", show.legend = F) + 
-  labs(x = "Color", y = "Slope (Price ~ Carat)", size = "Number of points",
-       title = "Price is less proportional to Carat for higher Colors")
+  guides(size = "none") + 
+  labs(
+    x = "Color", y = "Slope (Price ~ Carat)", size = "Number of points",
+    title = "Price is less proportional to Carat for higher Colors"
+  )
 
