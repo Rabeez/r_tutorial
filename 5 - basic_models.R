@@ -7,6 +7,7 @@ library(glmnetUtils) # formula (recommended) interface to glmnet
 
 # ----- basic linear models -----
 
+# FUNTIONAL INTERPRETATION OF MODELS
 # These models assume a linear relationship of the form
 # y = m*x + c        where m is the slope and c is the y-intercept and x is independent variable, y is dependent variable
 # x is also called the feature/regressor and y is also called the target/response
@@ -82,14 +83,17 @@ summary(model_inter)
 
 ## ------- Including polynomial features (polynomial regression) -----
 gapminder %>%
+  # ggplot(aes(x = pop, y = lifeExp)) + 
   ggplot(aes(x = lifeExp, y = gdpPercap)) + 
   geom_point() + 
   geom_smooth(method = "lm") + 
-  geom_smooth(method = "lm", formula = y ~ poly(x, 2, raw = T), color = "red")
+  geom_smooth(method = "lm", formula = y ~ poly(x, 2, raw = T), color = "red") #+
+  # scale_y_log10()
 
-model_a <- lm(lifeExp ~ pop, data = gapminder)
+# model_a <- lm(lifeExp ~ pop, data = gapminder)
+model_a <- lm(gdpPercap ~ lifeExp, data = gapminder)
 summary(model_a)
-model_b <- lm(lifeExp ~ poly(pop, 2, raw = T), data = gapminder)
+model_b <- lm(gdpPercap ~ poly(lifeExp, 2, raw = T), data = gapminder)
 summary(model_b)
 
 
@@ -99,9 +103,13 @@ gapminder %>%
   ggplot(aes(x = pop, y = lifeExp, color = continent)) + 
   geom_point(alpha = 0.2) +
   geom_smooth(method = "lm") +
-  scale_x_log10(labels = scales::label_comma())
+  scale_x_log10(labels = scales::label_comma()) + 
+  labs(
+    title = "Varying slope+intercept model",
+    subtitle = "Could be thought of as 5 separate models"
+  )
 
-# Note: This model spec does to represent the plot above (will see detail later)
+# Note: This model spec does to represent the plot above (will see why later)
 # This model spec is going to fit a slope for the numeric variable (same as before) and single offsets for each of the values in the categories
 # Meaning we are asking for separate lines for each continent but forcing them to be parallel
 # Note: If categories are represented by integers then an explicit factor conversion is needed in the formula (true for all models basically)
@@ -126,7 +134,8 @@ tidy(model, conf.int = T) %>%
   labs(title = "Accounting for continent effects greatly reduces the effect \nof population on life expectancy")
 
 # Let's try asking for predictions by making new data
-prediction_tbl2 <- tibble(crossing(seq(1000000,10000000,100), as_factor(levels(gapminder$continent)))) %>% 
+prediction_tbl2 <- tibble(crossing(pop = seq(1000000,10000000,100), continent = as_factor(levels(gapminder$continent)))) 
+prediction_tbl2 <- prediction_tbl2 %>% 
   rename_all(function(temp) c("pop", "continent")) %>% 
   mutate(prediction = predict(model2, prediction_tbl2))
 # This plot demonstrates the limitation of the assumptions made with this model
@@ -135,25 +144,35 @@ prediction_tbl2 %>%
   ggplot(aes(x = pop, y = prediction, color = continent)) + 
   geom_smooth(data = gapminder, mapping = aes(x = pop, y = lifeExp, color = continent), method = "lm", se = F) + 
   geom_line(linetype = "dashed") + 
-  scale_x_log10(labels = scales::label_comma())
+  scale_x_log10(labels = scales::label_comma()) + 
+  labs(
+    title = "Comparison of 2 types of models with same variables",
+    subtitle = "Solid lines = Varying slope+intercept (same as previous plot) | Made using geom_smooth\nDashed lines = Varying intercept + Fixed slope | Made using lm"
+  )
 
 
 ## ------- Varying slope (interaction with a factor) ------
 # This model relaxes the assumption of fixed slope for all continents
 model3 <- lm(lifeExp ~ log10(pop) * continent, data = gapminder)
+# model3 <- lm(lifeExp ~ log10(pop) + continent + log10(pop):continent, data = gapminder) # equivalent but more verbose formula
 summary(model3)
 glance(model3)
 tidy(model3)
 
-# The predictions for this interaction model match the result from the original geom_smooth with color aesthetic
-prediction_tbl3 <- tibble(crossing(seq(1000000,10000000,100), as_factor(levels(gapminder$continent)))) %>% 
+# The predictions for this interaction model match the result from the original geom_smooth with color aesthetic (varying slope+intercept)
+prediction_tbl3 <- tibble(crossing(pop = seq(1000000,10000000,100), continent = as_factor(levels(gapminder$continent)))) 
+prediction_tbl3 <- prediction_tbl3 %>% 
   rename_all(function(temp) c("pop", "continent")) %>% 
   mutate(prediction = predict(model3, prediction_tbl3))
 prediction_tbl3 %>% 
   ggplot(aes(x = pop, y = prediction, color = continent)) + 
   geom_smooth(data = gapminder, mapping = aes(x = pop, y = lifeExp, color = continent), method = "lm", se = F) + 
   geom_line(linetype = "dashed") + 
-  scale_x_log10(labels = scales::label_comma())
+  scale_x_log10(labels = scales::label_comma()) + 
+  labs(
+    title = "Comparison of 2 types of models with same variables",
+    subtitle = "Solid lines = Varying slope+intercept | Made using geom_smooth\nDashed lines = Varying slope+intercept | Made using lm"
+  )
 
 # Let's explicitly compare both versions of the model
 prediction_merged <- prediction_tbl2 %>% 
@@ -164,7 +183,10 @@ prediction_merged %>%
   ggplot(aes(x = pop, y = prediction, color = continent)) + 
   geom_line() + 
   scale_x_log10(labels = scales::label_comma()) + 
-  facet_wrap(~name)
+  facet_wrap(~name) + 
+  labs(
+    title = "Comparing both models fitted using lm"
+  )
 
 
 # ----- regularized linear models -----
@@ -186,13 +208,20 @@ coef(model_lasso)
 
 # ----- generalized linear models -----
 # Mathematical generalization of regression concept
+# STATISTICAL INTERPRETATION OF MODELS
+# The models assume that the target Y is a random variable obeying some distribution (usually gaussian)
+# This RV is determined by Y = h + noise where h is the unobservable 'true' signal and we only see Y 
+# which has noise (measurement, inherent, systemic, etc) added to it. 
+# For the gaussian model we model Y ~ N(mX+c, sigma) where m is the slope and c is the y-intercept, X is independent random variable and sigma is the noise component
+# The expression mu = mX+c is a 'link function' because we are 'linking' a parameter of the target distribution as a function of the regressor RV
+
 # ALL statistical tests are specific forms of this framework
 # GLM = formula + family + link-function
 
 # gaussian family (default link = linear) is equivalent to plain-old linear regression
 model_glm <- glm(formula = lifeExp ~ log10(pop), data = gapminder, family = "gaussian")
 tidy(model_glm)
-tidy(model)
+tidy(model) # compare with original model fitted using `lm`
 
 
 ## ------- poisson glm ------
@@ -203,7 +232,12 @@ insurance <- tibble(MASS::Insurance)
 insurance %>% 
   ggplot(aes(x = Holders, y = Claims)) + 
   geom_point() + 
-  scale_x_log10()
+  geom_smooth(method = "glm", method.args = list(family = "gaussian"), color = "blue") + 
+  geom_smooth(method = "glm", method.args = list(family = "poisson"), color = "red") + 
+  scale_x_log10() + 
+  labs(
+    title = "Clearly the Poisson model fits this data much better"
+  )
 
 model_claims_gaussian <- glm(formula = Claims ~ log10(Holders), data = insurance, family = "gaussian")
 tidy(model_claims_gaussian)
@@ -233,7 +267,7 @@ summary(model_breast)
 model_estimates <- tidy(model_breast, exponentiate = T, conf.int = T)
 
 # Plot compares effects of variables on the target
-model_estimates %>% 
+p1 <- model_estimates %>% 
   filter(term != "(Intercept)") %>% 
   mutate(estimate = estimate - 1,
          conf.low = conf.low - 1,
@@ -242,18 +276,23 @@ model_estimates %>%
   geom_abline(intercept = 0, slope = 0, color = "gray69") + 
   geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.2) +
   geom_point() + 
-  scale_color_manual(values = c("green3", "red2"), guide = F) +
+  scale_color_manual(values = c("green3", "red2"), guide = "none") +
   scale_y_continuous(labels = scales::label_percent()) + 
   labs(title = "Change is odds of being diagnosed with breast cancer \nfor a unit increase in each indicator")
-
+p1
 
 # ----- anova (explained variance) -----
-car::Anova(model_breast, type = 3) %>% 
+p2 <- car::Anova(model_breast, type = 3) %>% 
   tidy() %>% 
   mutate(explained_deviance = statistic / sum(statistic)) %>% 
   ggplot(aes(x = term, y = explained_deviance)) + 
   geom_segment(aes(xend = term, y = 0, yend = explained_deviance)) + 
   geom_point(size = 3) + 
-  scale_y_continuous(labels = scales::label_percent())
+  scale_y_continuous(labels = scales::label_percent()) + 
+  labs(
+    title = "%age of variance in target explained by each regressor"
+  )
+p2
 
-
+# Notice how the variables with high AND significant effect on output have higher explained variance
+p1 + p2
