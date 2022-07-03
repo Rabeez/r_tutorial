@@ -59,17 +59,20 @@ diamonds %>% select(cut, clarity, x, y, z) # select a subset of columns
 diamonds %>% select(-x, -y, -z) # select all EXCEPT these columns
 
 diamonds %>% filter(cut == "Ideal") # filter a subset of rows
-diamonds %>% filter(cut == "Ideal",
-                    depth >= 60) # multiple conditions
+diamonds %>% filter(
+  cut == "Ideal",
+  depth >= 60
+) # multiple conditions
 
 diamonds %>% rename(depth_measurement = depth)
 diamonds %>% mutate(volume = x * y * z) # create new column
 
-diamonds %>% summarise(count = n(),
-                       avg_carat = mean(carat),
-                       avg_depth = mean(depth)) # aggregation function (some special things like n() are available)
-diamonds %>% summarise_if(is.numeric, mean) # conditional aggregation functions available (look at docs for you scenario)
-
+diamonds %>% summarise(
+  count = n(),
+  avg_carat = mean(carat),
+  avg_depth = mean(depth)
+) # aggregation function (some special things like n() are available)
+diamonds %>% summarise(across(where(is.numeric), mean)) # conditional aggregation functions available (look at docs for you scenario)
 
 # grouping and method chaining
 diamonds %>% group_by(cut) # notice the 'Groups' entry above the printed data (R has set this table as special now)
@@ -87,8 +90,10 @@ diamonds %>%
   View() # the 10 most common cut-clarity combinations
 diamonds %>% 
   group_by(cut, clarity) %>% 
-  summarize(n = n(),
-            avg_price = mean(price)) %>% 
+  summarize(
+    n = n(),
+    avg_price = mean(price)
+  ) %>% 
   filter(n >= 500) %>% 
   arrange(desc(avg_price)) %>% 
   head(10) %>% 
