@@ -1,5 +1,5 @@
 # installing packages
-install.packages(tidyverse)
+install.packages("tidyverse")
 
 # load package
 library(tidyverse)
@@ -63,6 +63,15 @@ diamonds %>% filter(
   cut == "Ideal",
   depth >= 60
 ) # multiple conditions
+diamonds %>% filter(
+  (cut == "Ideal") | (cut == "Fair"),
+  depth >= 60
+) # multiple conditions
+diamonds %>% filter(
+  cut %in% c("Ideal", "Fair"),
+  depth >= 60
+) # multiple conditions
+
 
 diamonds %>% rename(depth_measurement = depth)
 diamonds %>% mutate(volume = x * y * z) # create new column
@@ -73,6 +82,7 @@ diamonds %>% summarise(
   avg_depth = mean(depth)
 ) # aggregation function (some special things like n() are available)
 diamonds %>% summarise(across(where(is.numeric), mean)) # conditional aggregation functions available (look at docs for you scenario)
+
 
 # grouping and method chaining
 diamonds %>% group_by(cut) # notice the 'Groups' entry above the printed data (R has set this table as special now)

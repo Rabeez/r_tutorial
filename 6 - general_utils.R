@@ -328,14 +328,14 @@ library(funneljoin)
 funneljoin::landed
 
 # this table contains entries for people who registered (this is a subset of landed)
-funneljoin::landed
+funneljoin::registered
 
 # 1. Choose users: This is an AFTER inner join, so only the users who registered after landing are included in result (same day does not count)
 # 2. For selected users choose timestamps: The chosen 'type' means that in the result for each user we want the first landing time and 
 # the first registration time after the chosen landing
 funneljoin::landed %>%
   funneljoin::after_inner_join(
-    unneljoin::registered, 
+    funneljoin::registered, 
     by_user = "user_id", by_time = "timestamp",
     type = "first-firstafter",
     suffix = c("_landed", "_registered")
