@@ -55,7 +55,7 @@ diamonds %>%
 # layering geometries (order matters)
 diamonds %>%
   ggplot(aes(x = clarity, y = price)) +
-  geom_boxplot() + 
+  geom_boxplot(outlier.shape = NA) + 
   geom_jitter(alpha = 0.1, size = 0.5, color = "coral")
 
 # also the aesthetics are inherited so they MUST be in the ggplot call and not in the geometries otherwise they will have to be repeated
@@ -69,14 +69,15 @@ diamonds %>%
 diamonds %>%
   ggplot(aes(x = price)) +
   geom_histogram() + 
+  geom_rug() + 
   scale_x_log10()
 
 # applying a more complex scale along with dedicated data transformations
 diamonds %>%
   mutate(volume = x * y * z) %>% 
   filter(volume <= 600) %>% 
-  arrange(depth) %>%
-  # arrange(desc(depth)) %>%
+  # arrange(depth) %>%
+  arrange(desc(depth)) %>%
   ggplot(aes(x = volume, y = price, color = depth)) +
   geom_point() + 
   scale_color_gradient2(low = "red", mid = "pink", high = "blue", midpoint = median(diamonds$depth))
